@@ -1,6 +1,11 @@
 %Initialize script:
 clear; clf; hold on;
 
+
+%% Todo:
+% 1. plot multiple raster plots using different colors
+
+
 %% Setting some constants and initial values
 
 %setting as global variables to be used in the spike generator
@@ -20,13 +25,37 @@ E_spike = 10;
 
 %% Running The Function:
 
-[t_rec, s_rec, v_m] = spike_generator(-1.2, 1000);
+%time units are in ms: 1000ms = 1sec
+I_inputs = [-2, -0.5, -0.4, -0.1, 0, 0.1];
+time_int = 1000;
 
-raster(s_rec);
+for i_inj = 1:size(I_inputs, 1)
+    [t_rec, s_rec, v_m] = spike_generator(I_inputs(i_inj), time_int);
+    
+end
+
+figure(1)
+for k1 = 1:12
+    subplot(2,6,k1)
+    h{k1} = plot(X,A(k1,:),X,B(k1,:));title(type{k1});
+end
+
+
+
+% since plotting time data, input all time series data as a series of
+function plot_util(t, val)
+    
+end
+
+
+%avg_fire_rate = single_neuron_fire_rate(-1.2);
+%disp(avg_fire_rate);
+%raster(find(s_rec));
 
 %% Raster plot function:
-
-function raster(t_rec, s_rec)
+% http://www.mit.edu/people/abbe/matlab/handle.html
+% https://labrigger.com/blog/2011/12/05/raster-plots-and-matlab/
+function raster(in)
     if size(in,1) > size(in,2)
         in=in';
     end
@@ -38,18 +67,6 @@ function raster(t_rec, s_rec)
     set(gca,'Color',get(gcf,'Color')) % match figure background
     set(gca,'YColor',get(gcf,'Color')) % hide the y axis
     box off
-end
-
-
-%% Multiple spike generation trials for average firing rate:
-
-function avg_fire_rate = response_func(I_inj)
-    %set interval on which to measure 
-    time_interval = 100;
-    for i=1:100
-        [t_rec, s_rec, v_m] = spike_generator(I_inj, time_interval);
-    end
-    avg_fire_rate = sum(s_rec) / time_interval;
 end
 
 
