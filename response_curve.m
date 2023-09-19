@@ -18,61 +18,29 @@ E_spike = 10;
 
 num_trials = 10;
 I_input = -1.1;
-I_noise = 0;
+I_noise = 1;
 time_interval = 1000; %[ms]
 
-%% Finding actual average fire rate:
-% average_firing_rate = avg_rate(100, I_input, I_noise, time_interval);
-% indices = abs(average_firing_rate - mean(average_firing_rate)) < sqrt(var(average_firing_rate));
-% avg = average_firing_rate(indices);
-% disp("Average: ");
-% disp(mean(avg));
+response_curve_gen(num_trials, 0, time_interval);
 
-
-%% Testing Convolution:
-plot_conv(num_trials, I_input, I_noise, time_interval);
-
-
-%% Testing Raster plot
-%raster(num_trials, I_input, I_noise, time_interval);
-
-function response_curve(n_trials, time)
+function response_curve_gen(n_trials, I_n, time)
+    I_c = -40:0.1:5;
     
+    for i = 1:size(I_c, 2)
+        average_firing_rate = avg_rate_conv(n_trials, I_c(i), I_n, time);
+        indices = abs(average_firing_rate - mean(average_firing_rate)) < sqrt(var(average_firing_rate));
+        avg = mean(average_firing_rate(indices));
+        avg_rates(i) = avg;
+    end
+    plot(I_c, avg_rates);
+    xlabel('Current (mA)');
+    ylabel('Average Firing Rate (Hz)');
+    title('Response Plot');
 end
 
-% 
-% function f_rate = avg_rate(n_trials, I, I_n, time)
-%     global E_spike
-%     global dt
-% 
-% 
-%     [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
-% 
-%     %find all spikes in the input
-%     s = v_m == E_spike;
-%     nonzeroIndices = cell(size(s,1),1);
-% 
-%     for row=1:size(s,1)
-%         nonzeroIndices{row} = find(spikeMatrix(row, :));
-%     end
-% 
-%     if (size(spk_indices) <= 1)
-%         disp("No spikes or only one spike!!");
-%         return;
-%     else
-%         min_spk_interval(:) = spk_indices(:, 2) - spk_indices(:, 1);
-%     end
-% 
-%     %number of trials
-%     num_neurons = n_trials;
-% 
-%     start_ind = min(spk_indices) + abs(floor(min_spk_interval* randn)); %measure interval must be greater than
-%     end_ind = start_ind + measure_interval;
-% 
-% end
 
 %% plot for convolution with gaussian for rate
-function avg_rates = avg_rate(n_trials, I, I_n, time)
+function avg_rates = avg_rate_conv(n_trials, I, I_n, time)
     global E_spike
     global dt
     [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
@@ -101,10 +69,6 @@ function avg_rates = avg_rate(n_trials, I, I_n, time)
     % disp(size(t));
 
 
-    subplot(num_neurons+1,1,1);
-    plot(t, gaussian_filter);
-    title("Filter plot");
-
     % measure_interval = 10 / dt; %in indices, not in ms
     % 
     % start_ind = abs(floor(randn*(size(t_rec) - measure_interval)));
@@ -124,7 +88,7 @@ function avg_rates = avg_rate(n_trials, I, I_n, time)
 end
 
 %% plot for convolution with gaussian for rate
-function plot_conv(n_trials, I, I_n, time)
+function avg_rates = avg_rate_simple(n_trials, I, I_n, time)
     global E_spike
     global dt
     [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
@@ -136,26 +100,7 @@ function plot_conv(n_trials, I, I_n, time)
     num_neurons = size(v_m, 1);
 
    
-    %create a gaussian filter:
-    sigma = 5;
     
-
-     %extend the length of the time so that the gaussian filter is not cut
-    %off:
-    t_offset = -10*sigma:dt:0;
-    t = [t_offset t_rec];
-    
-    s = [zeros(num_neurons, size(t_offset, 2)) s];
-
-    gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
-
-    disp(size(s));
-    disp(size(t));
-
-
-    subplot(num_neurons+1,1,1);
-    plot(t, gaussian_filter);
-    title("Filter plot");
 
     % measure_interval = 10 / dt; %in indices, not in ms
     % 
@@ -163,44 +108,12 @@ function plot_conv(n_trials, I, I_n, time)
     %plot all of the neurons
     for i=1:num_neurons
         spk_train = s(i, :);
-        conv_result = ifft(fft(spk_train).*fft(gaussian_filter));
-        subplot(num_neurons+1,1,i+1);
-        disp(size(conv_result(end - size(t_rec,2) + 1:end)));
-        % disp(size(t_rec));
-        plot(t_rec, conv_result(end - size(t_rec,2) + 1:end));
-        avg_frate = 1000 * mean(conv_result(end - size(t_rec,2) + 1:end));
-        title("Average Rate: " + string(avg_frate));
-        avg_rates(i) = avg_frate;
+        
+        
+        avg_rates(i) = 1000 * sum(spk_train) / 1000;
     end
     
 end
-
-%% function for raster plot
-function raster(n_trials, I, I_n, time)
-    global E_spike
-    [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
-    
-    s = v_m == E_spike;
-    % Create a raster plot
-    [rowIndices, timeIndices] = find(s);
-    
-    % Plot spikes as dots on a grid
-    figure;
-    scatter(timeIndices, rowIndices, 10, 'k', 'filled');  % Adjust 'k' for color and 'filled' for filled markers
-    
-    % Set plot properties
-    xlabel('Time');
-    ylabel('Neuron');
-    title('Raster Plot');
-    ylim([0.5, size(s, 1) + 0.5]);  % Set the y-axis limits to match the number of rows
-    grid on;
-    
-    % Optionally, invert the y-axis to display the top row at the top
-    set(gca, 'YDir', 'reverse');
-
-end
-
-
 
 %% Spike Generator Function
 
@@ -218,8 +131,8 @@ function [t, v_m] = spike_generator(N, I_inj, time_len, Inoise)%Inoise is zero i
     E_syn=-40;
 
     %sig_th_rand = 0.01;
-    sig_el_rand = 5;
-    sig_conductance = 0.01;
+    sig_el_rand = 0.5;
+    sig_conductance = 0.1;
     %sig_I_rand = 10;
 
     g_syn(:, 1)= zeros(N, 1); I_syn(:, 1)= zeros(N, 1); 
