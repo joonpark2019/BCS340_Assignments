@@ -16,9 +16,9 @@ E_thresh = -55; %threshold voltage for spikes [mV]
 global E_spike %[mV]
 E_spike = 10;
 
-num_trials = 10;
-I_input = -1.2;
-I_noise = 10;
+num_trials = 5;
+I_input = 0;
+I_noise = 2;
 time_interval = 1000; %[ms]
 min_current = -50;
 max_current = 5;
@@ -29,13 +29,18 @@ stochasticity = 1; %logic value for using noise
 rng('default');
 
 %% Testing Convolution:
-tic;
-response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
-hold on;
-response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
-telapsed = toc;
-disp("time elapsed (s):");
-disp(telapsed);
+% tic;
+% %no noise:
+% response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
+% hold on;
+% response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
+% telapsed = toc;
+% disp("time elapsed (s):");
+% disp(telapsed);
+
+%% Raster plots:
+
+raster(num_trials, I_input, I_noise, time_interval, stochasticity);
 
 
 
