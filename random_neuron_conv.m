@@ -161,7 +161,7 @@ function [t, v_m] = spike_generator(N, I_inj, time_len, Inoise)%Inoise is zero i
 
     %sig_th_rand = 0.01;
     sig_el_rand = 5;
-    sig_conductance = 0.01;
+    sig_conductance = 0.1;
     %sig_I_rand = 10;
 
     g_syn(:, 1)= zeros(N, 1); I_syn(:, 1)= zeros(N, 1); 
