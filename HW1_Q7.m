@@ -20,7 +20,7 @@ num_trials = 5;
 I_input = 0;
 I_noise = 2;
 time_interval = 1000; %[ms]
-min_current = -30;
+min_current = -50;
 max_current = 5;
 stochasticity = 1; %logic value for using noise
 
@@ -31,9 +31,20 @@ rng('default');
 %% Testing Convolution:
 tic;
 %no noise:
-response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
+% response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
 % hold on;
-% response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
+response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
+start_indx = floor(-1*(min_current + 10)/0.1);
+end_indx = floor(-1*(min_current + 0)/0.1);
+I_ins = min_current:0.1:max_current;
+I_ins = I_ins(start_indx:end_indx);
+frates = response_rates(start_indx:end_indx);
+P = polyfit(I_ins, frates, 1);
+yfit = polyval(P, I_ins);
+hold on;
+plot(I_ins, yfit, 'r-.');
+eqn = string(" Linear: y = " + P(1)) + "x + " + string(P(2));
+text(min(I_ins),max(frates),eqn,"HorizontalAlignment","left","VerticalAlignment","top")
 telapsed = toc;
 disp("time elapsed (s):");
 disp(telapsed);

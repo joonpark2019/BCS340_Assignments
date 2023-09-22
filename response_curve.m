@@ -27,7 +27,7 @@ function response_curve_gen(n_trials, I_n, time)
     I_c = -40:0.1:5;
     
     for i = 1:size(I_c, 2)
-        average_firing_rate = avg_rate_conv(n_trials, I_c(i), I_n, time);
+        average_firing_rate = avg_rate_simple(n_trials, I_c(i), I_n, time);
         indices = abs(average_firing_rate - mean(average_firing_rate)) < sqrt(var(average_firing_rate));
         avg = mean(average_firing_rate(indices));
         avg_rates(i) = avg;

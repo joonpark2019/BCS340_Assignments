@@ -17,7 +17,7 @@ global E_spike %[mV]
 E_spike = 10;
 
 num_trials = 10;
-I_input = -1.1;
+I_input = 0;
 I_noise = 0;
 time_interval = 1000; %[ms]
 
@@ -30,7 +30,48 @@ time_interval = 1000; %[ms]
 
 
 %% Testing Convolution:
-plot_conv(num_trials, I_input, I_noise, time_interval);
+s_train = plot_conv(num_trials, I_input, I_noise, time_interval);
+spk_times = zeros(num_trials, size(s_train, 2));
+for i=1:num_trials
+    i_times = find(s_train(i, :));
+    %disp(i_times);
+    spk_times(i, 1:length(i_times)) = i_times;
+end
+sptimes = spk_times*dt;
+
+%% Raster plot
+
+figure('Units','normalized','Position',[0 0 .3 1])
+ax = subplot(4,1,1); hold on
+
+% For all trials...
+for iTrial = 1:size(sptimes, 1)
+                  
+    spks            = sptimes(iTrial, :);         % Get all spikes of respective trial    
+    spks            = spks(1:find(spks, 1, 'last'));
+    %disp(size(spks));
+    xspikes         = repmat(spks,3,1);         % Replicate array
+    yspikes      	= nan(size(xspikes));       % NaN array
+    
+    if ~isempty(yspikes)
+        yspikes(1,:) = iTrial-1;                % Y-offset for raster plot
+        yspikes(2,:) = iTrial;
+    end
+    
+    plot(xspikes, yspikes, 'Color', 'k')
+end
+
+ax.XLim             = [0 time_interval];
+ax.YLim             = [0 size(sptimes, 1)];
+ax.XTick            = [0 10]; %fix this!!!
+
+ax.XLabel.String  	= 'Time [ms]';
+ax.YLabel.String  	= 'Trials';
+
+
+% ax = gca;
+% rasterplot(dt*spk_times(1), num_trials, size(s_train, 2), ax);
+% rasterplot(spk_times(2), num_trials, size(s_train, 2));
 
 
 %% Testing Raster plot
@@ -81,7 +122,7 @@ function avg_rates = avg_rate(n_trials, I, I_n, time)
     s = v_m == E_spike;
 
     %number of trials
-    num_neurons = size(v_m, 1);
+    %num_neurons = size(v_m, 1);
 
    
     %create a gaussian filter:
@@ -93,15 +134,15 @@ function avg_rates = avg_rate(n_trials, I, I_n, time)
     t_offset = -10*sigma:dt:0;
     t = [t_offset t_rec];
     
-    s = [zeros(num_neurons, size(t_offset, 2)) s];
+    s = [zeros(n_trials, size(t_offset, 2)) s];
 
+    %filter for measuring fire rate at each time
     gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
 
-    % disp(size(s));
-    % disp(size(t));
+    
 
 
-    subplot(num_neurons+1,1,1);
+    subplot(n_trials+1,1,1);
     plot(t, gaussian_filter);
     title("Filter plot");
 
@@ -109,7 +150,7 @@ function avg_rates = avg_rate(n_trials, I, I_n, time)
     % 
     % start_ind = abs(floor(randn*(size(t_rec) - measure_interval)));
     %plot all of the neurons
-    for i=1:num_neurons
+    for i=1:n_trials
         spk_train = s(i, :);
         conv_result = ifft(fft(spk_train).*fft(gaussian_filter));
         
@@ -123,8 +164,11 @@ function avg_rates = avg_rate(n_trials, I, I_n, time)
     
 end
 
+
+
+
 %% plot for convolution with gaussian for rate
-function plot_conv(n_trials, I, I_n, time)
+function spks = plot_conv(n_trials, I, I_n, time)
     global E_spike
     global dt
     [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
@@ -145,16 +189,16 @@ function plot_conv(n_trials, I, I_n, time)
     t_offset = -10*sigma:dt:0;
     t = [t_offset t_rec];
     
-    s = [zeros(num_neurons, size(t_offset, 2)) s];
+    s_p = [zeros(num_neurons, size(t_offset, 2)) s];
 
     gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
 
-    disp(size(s));
-    disp(size(t));
-
+    figure('Position', [50, 50, 1000, 900]);
 
     subplot(num_neurons+1,1,1);
     plot(t, gaussian_filter);
+    xlabel('Time (ms)');
+    ylabel('Firing Rate (Hz)');
     title("Filter plot");
 
     % measure_interval = 10 / dt; %in indices, not in ms
@@ -162,17 +206,41 @@ function plot_conv(n_trials, I, I_n, time)
     % start_ind = abs(floor(randn*(size(t_rec) - measure_interval)));
     %plot all of the neurons
     for i=1:num_neurons
-        spk_train = s(i, :);
-        conv_result = ifft(fft(spk_train).*fft(gaussian_filter));
+        spk_train = s_p(i, :);
+        
         subplot(num_neurons+1,1,i+1);
-        disp(size(conv_result(end - size(t_rec,2) + 1:end)));
+        %disp(size(conv_result(end - size(t_rec,2) + 1:end)));
         % disp(size(t_rec));
-        plot(t_rec, conv_result(end - size(t_rec,2) + 1:end));
-        avg_frate = 1000 * mean(conv_result(end - size(t_rec,2) + 1:end));
+        
+
+        s_times = find(s(i,:));
+        min_interval = min(diff(s_times));
+        start_idx = min(s_times) + abs(floor(randn*min_interval));
+        disp(start_idx);
+        end_idx =  start_idx + 5*min_interval;
+
+        conv_result = ifft(fft(spk_train).*fft(gaussian_filter)); %is it possible to make this computation shorter??
+    
+        
+        % t_bar = zeros(size(t_rec));
+        % t_bar(start_idx) = 1;
+        % t_bar(end_idx ) = 1;
+        % yyaxis left
+        % bar(t_rec, t_bar);
+        % yyaxis right
+        
+
+        conv_result = conv_result(end - size(t_rec,2) + 1:end);
+        plot(t_rec, [zeros(1, start_idx-1) conv_result(start_idx:end_idx) zeros(1, length(t_rec) - end_idx)]);
+        
+        avg_frate = 1000 * mean(conv_result(start_idx:end_idx));
         title("Average Rate: " + string(avg_frate));
         avg_rates(i) = avg_frate;
     end
-    
+
+    %disp(size(t_offset,2));
+    %spks = s_p(:, end - size(t_rec,2) + 1:end);
+    spks = s;
 end
 
 %% function for raster plot
@@ -218,7 +286,7 @@ function [t, v_m] = spike_generator(N, I_inj, time_len, Inoise)%Inoise is zero i
     E_syn=-40;
 
     %sig_th_rand = 0.01;
-    sig_el_rand = 5;
+    sig_el_rand = 2;
     sig_conductance = 0.1;
     %sig_I_rand = 10;
 

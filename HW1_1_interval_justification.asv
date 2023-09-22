@@ -113,7 +113,62 @@ end
 % end
 
 
-%% plot for normal convolution:
+
+%% plot for convolution with gaussian for rate
+function plot_conv(n_trials, I, I_n, time)
+    global E_spike
+    global dt
+    [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
+    
+    %find all spikes in the input
+    s = v_m == E_spike;
+
+    %number of trials
+    num_neurons = size(v_m, 1);
+
+   
+    %create a gaussian filter:
+    sigma = 5;
+    
+
+     %extend the length of the time so that the gaussian filter is not cut
+    %off:
+    t_offset = -10*sigma:dt:0;
+    t = [t_offset t_rec];
+    
+    s = [zeros(num_neurons, size(t_offset, 2)) s];
+
+    gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
+
+    disp(size(s));
+    disp(size(t));
+
+
+    subplot(num_neurons+1,1,1);
+    plot(t, gaussian_filter);
+    title("Filter plot");
+
+    % measure_interval = 10 / dt; %in indices, not in ms
+    % 
+    % start_ind = abs(floor(randn*(size(t_rec) - measure_interval)));
+    %plot all of the neurons
+    for i=1:num_neurons
+        spk_train = s(i, :);
+        conv_result = ifft(fft(spk_train).*fft(gaussian_filter));
+        subplot(num_neurons+1,1,i+1);
+        disp(size(conv_result(end - size(t_rec,2) + 1:end)));
+        % disp(size(t_rec));
+        plot(t_rec, conv_result(end - size(t_rec,2) + 1:end));
+        avg_frate = 1000 * mean(conv_result(end - size(t_rec,2) + 1:end));
+        title("Average Rate: " + string(avg_frate));
+        avg_rates(i) = avg_frate;
+    end
+    
+end
+
+
+
+%% calculate normal rate without convolution:
 function avg_rates = avg_fire_rate_norm(n_trials, I, I_n, time, stochastic)
     global E_spike
     global dt
@@ -146,7 +201,7 @@ end
 
 
 
-%% plot for convolution with gaussian for rate
+%% calculate convolution with gaussian for rate
 function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, time, stochastic)
     global E_spike
     global dt

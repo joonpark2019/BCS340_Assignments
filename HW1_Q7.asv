@@ -20,7 +20,7 @@ num_trials = 5;
 I_input = 0;
 I_noise = 2;
 time_interval = 1000; %[ms]
-min_current = -30;
+min_current = -50;
 max_current = 5;
 stochasticity = 1; %logic value for using noise
 
@@ -31,9 +31,12 @@ rng('default');
 %% Testing Convolution:
 tic;
 %no noise:
-response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
+% response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
 % hold on;
-% response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
+response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
+end_indx = floor(-1*(min_current + 1.2)/0.1);
+I_ins = min_cur
+response_rates(1:end_indx);
 telapsed = toc;
 disp("time elapsed (s):");
 disp(telapsed);
