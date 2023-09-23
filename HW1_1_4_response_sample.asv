@@ -16,12 +16,12 @@ E_thresh = -55; %threshold voltage for spikes [mV]
 global E_spike %[mV]
 E_spike = 10;
 
-num_trials = 10;
+num_trials = 5;
 I_input = -0.9860;
 I_noise = 0;
 time_interval = 1000; %[ms]
 min_current = -1.0;
-max_current = 0;
+max_current = 0.4;
 stochasticity = 1; %logic value for using noise
 
 
@@ -43,21 +43,14 @@ rng('default');
 
 %I = find_current(num_trials, I_input, 1, I_noise, time_interval, stochasticity);
 disp(mean(avg_fire_rate_conv(num_trials, I_input, I_noise, time_interval, stochasticity)));
-I_result = interval_search(num_trials, min_current, max_current, 1, I_noise, time_interval, stochasticity);
+I = interval_search(num_trials, min_current, max_current, 1, I_noise, time_interval, stochasticity);
 disp("Current: ");
-disp(I_result);
+disp(I);
 
-rates = [0.99 0.8 0.7 0.6 0.5];
-for rr=rates
-    I_result = interval_search(num_trials, I_result, max_current, rr, I_noise, time_interval, stochasticity);
-    disp("Current: ");
-    disp(I_result);
-
-end
 
 %% Trying to plot raster plot for lowest achievable firing rate:
 
-s_train = plot_conv(num_trials, I_result, I_noise, time_interval, stochasticity);
+s_train = plot_conv(num_trials, I_input, I_noise, time_interval, stochasticity);
 spk_times = zeros(num_trials, size(s_train, 2));
 for i=1:num_trials
     i_times = find(s_train(i, :));
@@ -176,7 +169,7 @@ function I = interval_search(n_trials, I_min, I_max, rate_target, I_n, time, sto
     I = I_max;
     for I_input=I_range
         rate = mean(avg_fire_rate_conv(n_trials, I_input, I_n, time, stochastic));
-        if abs(rate - rate_target) < 0.05
+        if abs(rate - rate_target) < 0.1
             I = I_input;
             break
         end
@@ -230,7 +223,7 @@ function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, time, stochastic)
     t_offset = -10*sigma:dt:0;
     t = [t_offset t_rec];
     
-    s_p = [zeros(n_trials, size(t_offset, 2)) s];
+    s = [zeros(n_trials, size(t_offset, 2)) s];
 
     gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
 
@@ -240,27 +233,26 @@ function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, time, stochastic)
     %plot all of the neurons
     
     for i=1:n_trials
-        spk_train = s_p(i, :);
-        s_times = find(s(i, :));
-        if isempty(s_times) || (length(s_times) == 1 && s_times(1) == 1)
-            avg_rates(i) = 0;
+        spk_train = s(i, :);
+        s_times = find(spk_train);
+        if isempty(s_times) || length(s_times) == 1
+            avg_frate = 0;
         else
             conv_result = ifft(fft(spk_train).*fft(gaussian_filter));
-            avg_rates(i) = 1000 * mean(conv_result(end - size(t_rec,2) + 1:end));
+            avg_frate = 1000 * mean(conv_result(end - size(t_rec,2) + 1:end));
         end
         
         
         %disp(size(conv_result(end - size(t_rec,2) + 1:end)));
         % disp(size(t_rec));
-
         
         
         
-        
-        % = avg_frate;
+        avg_rates(i) = avg_frate;
     end
     
 end
+
 
 
 
@@ -317,8 +309,8 @@ function spks = plot_conv(n_trials, I, I_n, time, stochastic)
         s_times = find(s(i,:));
        
         %if there are no spikes, there is no need to compute the convolution:
-        if isempty(s_times) || (length(s_times) == 1 && s_times(1) == 1)
-            %disp("AAAAAA");
+        if isempty(s_times) || size(s_times, 2) == 1
+            disp("AAAAAA");
             conv_result = zeros(1, length(t_rec));
             avg_frate = 0;
         else
