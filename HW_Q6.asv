@@ -16,12 +16,12 @@ E_thresh = -55; %threshold voltage for spikes [mV]
 global E_spike %[mV]
 E_spike = 10;
 
-num_trials = 5;
+num_trials = 10;
 I_input = 0;
 I_noise = 0;
 time_interval = 1000; %[ms]
-min_current = -20;
-max_current = 5;
+min_current = -5;
+max_current = 50;
 stochasticity = 1; %logic value for using noise
 
 
@@ -41,35 +41,14 @@ rng('default');
 % disp(telapsed);
 
 
-%% Response curve using JUST noise input
-I_noise_min = -10;
-I_noise_max = 10;
-%response_rates = noise_response_curve_conv(num_trials, I_noise_min, I_noise_max, time_interval, stochasticity);
-
-%% First, find Noise value at which neuron first starts to fire
-I_noise_test = I_noise_min:0.1:I_noise_max;
-initial_current = 0;
-for i_nse = I_noise_test
-    rate = mean(avg_fire_rate_conv(num_trials, 0, I_noise(i_n), time_interval, stochasticity));
-    if rate > 0
-        initial_current = i_nse;
-        break
-    end
-end
+%% Plotting Response Curve using background noise from e
+figure;
+response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
+hold on;
+response_rates = response_curve_conv(10, 1.90, time_interval, min_current, max_current, stochasticity);
 
 
-%% Narrowing down the range for noise
-I_noise = i_nse:0.01:2.0;
-for i_n=1:length(I_noise)
-    rate = mean(avg_fire_rate_conv(num_trials, 0, I_noise(i_n), time_interval, stochasticity));
-    if abs(rate - 5) < 0.05
-        disp("rate:");
-        disp(rate);
-        disp("Noise current:");
-        disp()
-        break
-    end
-end
+
 
 function response = noise_response_curve_conv(n_trials, I_noise_min, I_noise_max, time, stochastic)
     I_noise_inputs = I_noise_min:0.1:I_noise_max;
@@ -339,7 +318,7 @@ function [t, v_m] = spike_generator_standard(N, I_inj, time_len, Inoise)%Inoise 
         %g_syn(:, i)= g_syn(:, i-1) - dt/tau * g_syn(:, i-1);
         %I_syn(:, i)= g_syn(:, i).*(v_m(:, i-1)-E_syn);
         v_m(:, i) = v_m(:, i-1) - dt*(1/tau) *(v_m(:, i-1) - E_rest) ...
-        - dt*(R/tau)* I_inj ...
+        + dt*(R/tau)* I_inj ...
         + dt*(R/tau) * rand(N,1)*Inoise;
         %- dt*(R/tau)* I_syn(:, i) ...
 
@@ -390,7 +369,7 @@ function [t, v_m] = spike_generator_stochastic(N, I_inj, time_len, Inoise)%Inois
         %g_syn(:, i)= g_syn(:, i-1) - dt/tau * g_syn(:, i-1);
         %I_syn(:, i)= g_syn(:, i).*(v_m(:, i-1)-E_syn);
         v_m(:, i) = v_m(:, i-1) - dt*(1/tau) *(1 + sig_conductance * randn(N, 1)).* (v_m(:, i-1) - E_rest) ...
-        - dt*(R/tau)* I_inj ...
+        + dt*(R/tau)* I_inj ...
         + dt*(R/tau) * rand(N,1)*Inoise;
         %- dt*(R/tau)* I_syn(:, i) ...
 

@@ -20,8 +20,8 @@ num_trials = 5;
 I_input = 0;
 I_noise = 0;
 time_interval = 1000; %[ms]
-min_current = -20;
-max_current = 5;
+min_current = 0;
+max_current = 30;
 stochasticity = 1; %logic value for using noise
 
 
@@ -33,8 +33,8 @@ rng('default');
 % %no noise:
 %spks = plot_conv(num_trials, I_input, I_noise, time_interval, stochasticity);
 %figure;
-%response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
-%hold on;
+response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
+hold on;
 % % response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
 % telapsed = toc;
 % disp("time elapsed (s):");
@@ -44,7 +44,7 @@ rng('default');
 %% Response curve using JUST noise input
 I_noise_min = -10;
 I_noise_max = 10;
-%response_rates = noise_response_curve_conv(num_trials, I_noise_min, I_noise_max, time_interval, stochasticity);
+response_rates = noise_response_curve_conv(num_trials, I_noise_min, I_noise_max, time_interval, stochasticity);
 
 %% First, find Noise value at which neuron first starts to fire
 I_noise_test = I_noise_min:0.1:I_noise_max;
@@ -288,7 +288,7 @@ end
 
 
 %% Raster Plot function:
-
+% taken from : https://www.youtube.com/watch?v=27Y2c596-U0
 function raster_plot(sptimes, time_interval)
     
     figure('Units','normalized','Position',[0 0 .3 1])
@@ -360,7 +360,7 @@ function [t, v_m] = spike_generator_standard(N, I_inj, time_len, Inoise)%Inoise 
         %g_syn(:, i)= g_syn(:, i-1) - dt/tau * g_syn(:, i-1);
         %I_syn(:, i)= g_syn(:, i).*(v_m(:, i-1)-E_syn);
         v_m(:, i) = v_m(:, i-1) - dt*(1/tau) *(v_m(:, i-1) - E_rest) ...
-        - dt*(R/tau)* I_inj ...
+        + dt*(R/tau)* I_inj ...
         + dt*(R/tau) * rand(N,1)*Inoise;
         %- dt*(R/tau)* I_syn(:, i) ...
 
@@ -411,7 +411,7 @@ function [t, v_m] = spike_generator_stochastic(N, I_inj, time_len, Inoise)%Inois
         %g_syn(:, i)= g_syn(:, i-1) - dt/tau * g_syn(:, i-1);
         %I_syn(:, i)= g_syn(:, i).*(v_m(:, i-1)-E_syn);
         v_m(:, i) = v_m(:, i-1) - dt*(1/tau) *(1 + sig_conductance * randn(N, 1)).* (v_m(:, i-1) - E_rest) ...
-        - dt*(R/tau)* I_inj ...
+        + dt*(R/tau)* I_inj ...
         + dt*(R/tau) * rand(N,1)*Inoise;
         %- dt*(R/tau)* I_syn(:, i) ...
 

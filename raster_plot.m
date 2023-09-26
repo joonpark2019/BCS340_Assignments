@@ -1,11 +1,32 @@
 
-in = [3, 4, 5, 10, 27];
+function raster_plot(sptimes, time_interval)
+    
+    figure('Units','normalized','Position',[0 0 .3 1])
+    ax = subplot(4,1,1); hold on
+    
+    % For all trials...
+    for iTrial = size(sptimes, 1):-1:1
+                      
+        spks            = sptimes(iTrial, :);         % Get all spikes of respective trial    
+        spks            = spks(1:find(spks, 1, 'last'));
+        %disp(size(spks));
+        xspikes         = repmat(spks,3,1);         % Replicate array
+        yspikes      	= nan(size(xspikes));       % NaN array
+        
+        if ~isempty(yspikes)
+            yspikes(1,:) = iTrial-1;                % Y-offset for raster plot
+            yspikes(2,:) = iTrial;
+        end
+        
+        plot(xspikes, yspikes, 'Color', 'k')
+    end
+    
+    ax.XLim             = [0 time_interval];
+    ax.YLim             = [0 size(sptimes, 1)];
+    ax.XTick            = [0 10]; %fix this!!!
+    
+    ax.XLabel.String  	= 'Time [ms]';
+    ax.YLabel.String  	= 'Trials';
+    title("Raster Plot");
 
-axis([0 max(in)+1 -1 2])
-plot([in;in],[ones(size(in));zeros(size(in))],'k-')
-set(gca,'TickDir','out') % draw the tick marks on the outside
-set(gca,'YTick', []) % don't draw y-axis ticks
-set(gca,'PlotBoxAspectRatio',[1 0.05 1]) % short and wide
-set(gca,'Color',get(gcf,'Color')) % match figure background
-set(gca,'YColor',get(gcf,'Color')) % hide the y axis
-box off
+end

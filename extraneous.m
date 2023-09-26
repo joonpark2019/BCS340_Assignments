@@ -1,174 +1,3 @@
-clear; close all; 
-
-%% Setting some constants and initial values
-
-%setting as global variables to be used in the spike generator
-global E_rest
-E_rest = -65; % resting potential [mV]
-global tau
-tau = 20; % time constant [ms]
-global dt
-dt=0.1; % integration time step [ms]
-global R
-R = 10; %resistance(Ohms)
-global E_thresh
-E_thresh = -55; %threshold voltage for spikes [mV]
-global E_spike %[mV]
-E_spike = 10;
-
-num_trials = 10;
-I_input = -0.9860;
-I_noise = 0;
-time_interval = 1000; %[ms]
-min_current = -1.0;
-max_current = 0;
-stochasticity = 1; %logic value for using noise
-
-
-%fix random seed:
-rng('default');
-
-%% Testing Convolution:
-% tic;
-% %no noise:
-% response_rates = response_curve_conv(num_trials, 0, time_interval, min_current, max_current, stochasticity);
-% % hold on;
-% % response_rates = response_curve_conv(num_trials, I_noise, time_interval, min_current, max_current, stochasticity);
-% telapsed = toc;
-% disp("time elapsed (s):");
-% disp(telapsed);
-
-%% Trying to find 20Hz:
-
-
-%I = find_current(num_trials, I_input, 1, I_noise, time_interval, stochasticity);
-disp(mean(avg_fire_rate_conv(num_trials, I_input, I_noise, time_interval, stochasticity)));
-I_result = interval_search(num_trials, min_current, max_current, 1, I_noise, time_interval, stochasticity);
-disp("Current: ");
-disp(I_result);
-
-rates = [0.99 0.8 0.7 0.6 0.5];
-for rr=rates
-    I_result = interval_search(num_trials, I_result, max_current, rr, I_noise, time_interval, stochasticity);
-    disp("Current: ");
-    disp(I_result);
-
-end
-
-%% Trying to plot raster plot for lowest achievable firing rate:
-
-s_train = plot_conv(num_trials, I_result, I_noise, time_interval, stochasticity);
-spk_times = zeros(num_trials, size(s_train, 2));
-for i=1:num_trials
-    i_times = find(s_train(i, :));
-    %disp(i_times);
-    spk_times(i, 1:length(i_times)) = i_times;
-end
-
-%a num_trials x spk_train length sized array
-sptimes = spk_times*dt;
-
-raster_plot(sptimes, time_interval);
-
-
-
-function response = response_curve_conv(n_trials, I_noise, time, min_I, max_I, stochastic)
-    I_inputs = min_I:0.1:max_I;
-    for i_input = 1:length(I_inputs)
-        %use convolution for stochastic result:
-        %avg_rates = avg_fire_rate_conv(n_trials, I_inputs(i_input), I_noise, time, stochastic);
-        % indices = abs(avg_rates - mean(avg_rates)) < sqrt(var(avg_rates));
-        % response(i_input) = mean(avg_rates(indices == 1));
-        response(i_input) = mean(avg_fire_rate_conv(n_trials, I_inputs(i_input), I_noise, time, stochastic));
-    end
-    
-    plot(I_inputs, response);
-    xlabel('Input Current (mA)');
-    ylabel('Average Firing Rate (Hz)');
-    title('Response Curve');
-    
-end
-
-function response = response_curve_norm(n_trials, I_noise, time, min_I, max_I, stochastic)
-    I_inputs = min_I:0.1:max_I;
-    for i_input = 1:length(I_inputs)
-        avg_rates = avg_fire_rate_norm(n_trials, I_inputs(i_input), I_noise, time, stochastic);
-        %indices = abs(avg_rates - mean(avg_rates)) < sqrt(var(avg_rates));
-        %response(i_input) = mean(avg_rates(indices == 1));
-        response(i_input) = mean(avg_rates);
-    end
-    
-    plot(I_inputs, response);
-    xlabel('Input Current (mA)');
-    ylabel('Average Firing Rate (Hz)');
-    title('Response Curve');
-
-end
-
-% 
-% function f_rate = avg_rate(n_trials, I, I_n, time)
-%     global E_spike
-%     global dt
-% 
-% 
-%     [t_rec, v_m] = spike_generator(n_trials, I, time, I_n);
-% 
-%     %find all spikes in the input
-%     s = v_m == E_spike;
-%     nonzeroIndices = cell(size(s,1),1);
-% 
-%     for row=1:size(s,1)
-%         nonzeroIndices{row} = find(spikeMatrix(row, :));
-%     end
-% 
-%     if (size(spk_indices) <= 1)
-%         disp("No spikes or only one spike!!");
-%         return;
-%     else
-%         min_spk_interval(:) = spk_indices(:, 2) - spk_indices(:, 1);
-%     end
-% 
-%     %number of trials
-%     num_neurons = n_trials;
-% 
-%     start_ind = min(spk_indices) + abs(floor(min_spk_interval* randn)); %measure interval must be greater than
-%     end_ind = start_ind + measure_interval;
-% 
-% end
-
-
-%% plot for normal convolution:
-function avg_rates = avg_fire_rate_norm(n_trials, I, I_n, time, stochastic)
-    global E_spike
-    global dt
-    if stochastic == 1
-        [t_rec, v_m] = spike_generator_stochastic(n_trials, I, time, I_n);
-    else
-        [t_rec, v_m] = spike_generator_standard(n_trials, I, time, I_n);
-    end
-    
-    %find all spikes in the input
-    s = v_m == E_spike;
-
-    %number of trials
-    num_neurons = size(v_m, 1);
-
-    % start_ind = abs(floor(randn*(size(t_rec) - measure_interval)));
-    %plot all of the neurons
-    for i=1:num_neurons
-        spk_train = s(i, :);
-
-        %disp(size(conv_result(end - size(t_rec,2) + 1:end)));
-        % disp(size(t_rec));
-        
-        avg_frate = 1000 * sum(spk_train) / time;
-        
-        avg_rates(i) = avg_frate;
-    end
-    
-end
-
-
 
 function I = interval_search(n_trials, I_min, I_max, rate_target, I_n, time, stochastic)
     I_range = I_min:0.001:I_max;
@@ -222,7 +51,7 @@ function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, time, stochastic)
 
    
     %create a gaussian filter:
-    sigma = 5;
+    sigma = 1;
     
 
      %extend the length of the time so that the gaussian filter is not cut
@@ -263,89 +92,89 @@ function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, time, stochastic)
 end
 
 
-
-%% plot for convolution with gaussian for rate
-function spks = plot_conv(n_trials, I, I_n, time, stochastic)
-    global E_spike
-    global dt
-
-    if stochastic == 1
-        [t_rec, v_m] = spike_generator_stochastic(n_trials, I, time, I_n);
-    else
-        [t_rec, v_m] = spike_generator_standard(n_trials, I, time, I_n);
-    end
-    
-    %find all spikes in the input
-    s = v_m == E_spike;
-
-    %number of trials
-    num_neurons = size(v_m, 1);
-
-   
-    %create a gaussian filter:
-    sigma = 5;
-    
-
-     %extend the length of the time so that the gaussian filter is not cut
-    %off:
-    t_offset = -10*sigma:dt:0;
-    t = [t_offset t_rec];
-    
-    %add additional time offset at the beginning so that the gaussian filter centered at zero is
-    %not cut off
-    s_p = [zeros(num_neurons, size(t_offset, 2)) s];
-
-    gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
-
-    %setting up figure for plotting
-    figure('Position', [50, 50, 1000, 900]);
-    subplot(n_trials+1,1,1);
-    plot(t, gaussian_filter);
-    xlabel('Time (ms)');
-    ylabel('Firing Rate (Hz)');
-    title("Filter plot");
-
-
-    t_len = length(t_rec);
-    for i=1:n_trials
-
-        spk_train = s_p(i, :);
-        
-        subplot(n_trials+1,1,i+1);
-
-        % find times at which spikes occur
-        s_times = find(s(i,:));
-       
-        %if there are no spikes, there is no need to compute the convolution:
-        if isempty(s_times) || (length(s_times) == 1 && s_times(1) == 1)
-            %disp("AAAAAA");
-            conv_result = zeros(1, length(t_rec));
-            avg_frate = 0;
-        else
-            
-            conv_result = ifft(fft(spk_train).*fft(gaussian_filter)); %is it possible to make this computation shorter??
-            % min_interval = min(diff(s_times));
-            % 
-            % %disp(min_interval);
-            % start_idx = min(s_times) + abs(floor(randn*min_interval));
-            % %disp(start_idx);
-            % end_idx =  start_idx + 5*min_interval;
-            
-            conv_result = conv_result(end - t_len + 1:end);
-            % avg_frate = 1000 * mean(conv_result(start_idx:end_idx));
-            avg_frate = 1000 * mean(conv_result);
-            %plot_result = [zeros(1, start_idx-1) conv_result(start_idx:end_idx) zeros(1, t_len - end_idx)];
-          
-        end
-
-        plot(t_rec, conv_result);
-  
-        title("Average Rate: " + string(avg_frate));
-        avg_rates(i) = avg_frate;
-    end
-
-    spks = s;
-end
+% 
+% %% plot for convolution with gaussian for rate
+% function spks = plot_conv(n_trials, I, I_n, time, stochastic)
+%     global E_spike
+%     global dt
+% 
+%     if stochastic == 1
+%         [t_rec, v_m] = spike_generator_stochastic(n_trials, I, time, I_n);
+%     else
+%         [t_rec, v_m] = spike_generator_standard(n_trials, I, time, I_n);
+%     end
+% 
+%     %find all spikes in the input
+%     s = v_m == E_spike;
+% 
+%     %number of trials
+%     num_neurons = size(v_m, 1);
+% 
+% 
+%     %create a gaussian filter:
+%     sigma = 1;
+% 
+% 
+%      %extend the length of the time so that the gaussian filter is not cut
+%     %off:
+%     t_offset = -10*sigma:dt:0;
+%     t = [t_offset t_rec];
+% 
+%     %add additional time offset at the beginning so that the gaussian filter centered at zero is
+%     %not cut off
+%     s_p = [zeros(num_neurons, size(t_offset, 2)) s];
+% 
+%     gaussian_filter = 1/(sqrt(2*pi)*sigma) * exp(-t.^2 / (2*sigma^2));
+% 
+%     %setting up figure for plotting
+%     figure('Position', [50, 50, 1000, 900]);
+%     subplot(n_trials+1,1,1);
+%     plot(t, gaussian_filter);
+%     xlabel('Time (ms)');
+%     ylabel('Firing Rate (Hz)');
+%     title("Filter plot");
+% 
+% 
+%     t_len = length(t_rec);
+%     for i=1:n_trials
+% 
+%         spk_train = s_p(i, :);
+% 
+%         subplot(n_trials+1,1,i+1);
+% 
+%         % find times at which spikes occur
+%         s_times = find(s(i,:));
+% 
+%         %if there are no spikes, there is no need to compute the convolution:
+%         if isempty(s_times) || (length(s_times) == 1 && s_times(1) == 1)
+%             %disp("AAAAAA");
+%             conv_result = zeros(1, length(t_rec));
+%             avg_frate = 0;
+%         else
+% 
+%             conv_result = ifft(fft(spk_train).*fft(gaussian_filter)); %is it possible to make this computation shorter??
+%             % min_interval = min(diff(s_times));
+%             % 
+%             % %disp(min_interval);
+%             % start_idx = min(s_times) + abs(floor(randn*min_interval));
+%             % %disp(start_idx);
+%             % end_idx =  start_idx + 5*min_interval;
+% 
+%             conv_result = conv_result(end - t_len + 1:end);
+%             % avg_frate = 1000 * mean(conv_result(start_idx:end_idx));
+%             avg_frate = 1000 * mean(conv_result);
+%             %plot_result = [zeros(1, start_idx-1) conv_result(start_idx:end_idx) zeros(1, t_len - end_idx)];
+% 
+%         end
+% 
+%         plot(t_rec, conv_result);
+% 
+%         title("Average Rate: " + string(avg_frate));
+%         avg_rates(i) = avg_frate;
+%     end
+% 
+%     spks = s;
+% end
 
 
 %% calculation for convolution with gaussian for rate
@@ -500,7 +329,7 @@ function [t, v_m] = spike_generator_standard(N, I_inj, time_len, Inoise)%Inoise 
         %g_syn(:, i)= g_syn(:, i-1) - dt/tau * g_syn(:, i-1);
         %I_syn(:, i)= g_syn(:, i).*(v_m(:, i-1)-E_syn);
         v_m(:, i) = v_m(:, i-1) - dt*(1/tau) *(v_m(:, i-1) - E_rest) ...
-        - dt*(R/tau)* I_inj ...
+        + dt*(R/tau)* I_inj ...
         + dt*(R/tau) * rand(N,1)*Inoise;
         %- dt*(R/tau)* I_syn(:, i) ...
 
@@ -531,7 +360,7 @@ function [t, v_m] = spike_generator_stochastic(N, I_inj, time_len, Inoise)%Inois
 
     E_syn=-40;
 
-    %sig_th_rand = 0.01;
+    sig_th_rand = 0.1;
     sig_el_rand = 2;
     sig_conductance = 0.1;
     %sig_I_rand = 10;
@@ -548,15 +377,17 @@ function [t, v_m] = spike_generator_stochastic(N, I_inj, time_len, Inoise)%Inois
         %isolation)
         %Make the 
 
+% *(1 + sig_conductance * randn(N, 1)).
+
         %g_syn(:, i)= g_syn(:, i-1) - dt/tau * g_syn(:, i-1);
         %I_syn(:, i)= g_syn(:, i).*(v_m(:, i-1)-E_syn);
-        v_m(:, i) = v_m(:, i-1) - dt*(1/tau) *(1 + sig_conductance * randn(N, 1)).* (v_m(:, i-1) - E_rest) ...
-        - dt*(R/tau)* I_inj ...
+        v_m(:, i) = v_m(:, i-1) - dt*(1/tau) * (v_m(:, i-1) - E_rest) ...
+        + dt*(R/tau)* I_inj ...
         + dt*(R/tau) * rand(N,1)*Inoise;
         %- dt*(R/tau)* I_syn(:, i) ...
 
         %problem here with vectorization:
-        spks = v_m(:, i) > E_thresh;
+        spks = v_m(:, i) > (E_thresh + randn(1)*sig_th_rand);
         v_m(spks == 1, i-1) = E_spike;
         v_m(spks == 1, i) = E_L(spks == 1);
         
