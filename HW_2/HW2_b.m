@@ -16,34 +16,34 @@ E_thresh = -55; %threshold voltage for spikes [mV]
 global E_spike %[mV]
 E_spike = 10;
 global E_syn %[mV]
-E_syn = 10; 
+E_syn = -50; 
 global tau_syn
 tau_syn = 1;
 
 num_trials = 10; %number of spike trains generated to estimate firing rate
-I_noise = 8; % [mA]
-time_interval = 10000; %[ms]
+time_interval = 1000; %[ms]
 I_min = 0; % [mA]
 I_max= 0; % [mA]
+I_noise = 13.2;
+
 
 %fix random seed:
 rng('default');
 
+spk_t = [200];
 
-spk_t = [];
 
-spk_output = synaptic_neuron(num_trials, I_max, spk_t, time_interval, I_noise);
+spk_output = synaptic_neuron(num_trials, 0, I_noise, spk_t, time_interval, 1);
 
-spk_times = zeros(num_trials, size(spk_output, 2));
-    
-%find times at which the spikes are non-zero
-for i=1:num_trials
-    i_times = find(spk_output(i, :));
-        %disp(i_times);
-    spk_times(i, 1:length(i_times)) = i_times;
-end
+% spk_times = zeros(num_trials, size(spk_output, 2));
+% 
+% %find times at which the spikes are non-zero
+% for i=1:num_trials
+%     i_times = find(spk_output(i, :));
+%         %disp(i_times);
+%     spk_times(i, 1:length(i_times)) = i_times;
+% end
+% 
+% 
+% raster_plot(spk_times*dt, time_interval);
 
-avg_rates = avg_fire_rate(num_trials, I_max, I_noise, spk_t, time_interval);
-disp(mean(avg_rates));
-
-raster_plot(spk_times*dt, time_interval);

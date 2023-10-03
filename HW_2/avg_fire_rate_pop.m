@@ -1,6 +1,6 @@
 
 %% revised calculation for rate with gaussian:
-function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, spk_input, time)
+function avg_rates = avg_fire_rate_pop(n_trials, I, I_n, spk_input, time)
     global E_spike
     global dt
 
@@ -30,6 +30,8 @@ function avg_rates = avg_fire_rate_conv(n_trials, I, I_n, spk_input, time)
     xlabel('Time (ms)', 'FontSize', 7);
     ylabel('Firing Rate (Hz)', 'FontSize', 7);
     title("Filter plot");
+
+    start_time = randn*time;
 
     for i=1:n_trials
         % spk_train = s_p(i, :);

@@ -23,7 +23,7 @@ function raster_plot(sptimes, time_interval)
     
     ax.XLim             = [0 time_interval];
     ax.YLim             = [0 size(sptimes, 1)];
-    ax.XTick            = [0 10]; %fix this!!!
+    ax.XTick            = [0:200:time_interval]; 
     
     ax.XLabel.String  	= 'Time [ms]';
     ax.YLabel.String  	= 'Trials';
