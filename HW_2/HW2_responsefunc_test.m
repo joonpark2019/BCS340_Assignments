@@ -33,7 +33,15 @@ rng('default');
 spk_t = [];
 
 spk_first = synaptic_neuron(num_trials, I_max, I_noise, spk_t, time_interval,  0);
-spk_second = synaptic_neuron(num_trials, I_max, I_noise, spk_first, time_interval, 0);
+
+%find times at which the spikes are non-zero
+for i=1:num_trials
+    i_times = find(spk_first(i, :));
+        %disp(i_times);
+    spk_first(i, 1:length(i_times)) = i_times;
+end
+
+spk_second = synaptic_neuron(num_trials, I_max, I_noise, dt*spk_first, time_interval, 0);
 
 
 spk_times = zeros(2, size(spk_first, 2));
@@ -44,6 +52,6 @@ spk_times(2, 1:length(i_times_second )) = i_times_second;
 
 
 raster_plot(spk_times*dt, time_interval);
-max_corr = response_function(spk_first, spk_second);
-disp(max_corr);
+corr = response_function(spk_first, spk_second);
+disp(corr);
 

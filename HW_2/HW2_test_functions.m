@@ -21,8 +21,8 @@ global tau_syn
 tau_syn = 1;
 
 num_trials = 10; %number of spike trains generated to estimate firing rate
-I_noise = 8; % [mA]
-time_interval = 10000; %[ms]
+I_noise = 0; % [mA]
+time_interval = 1000; %[ms]
 I_min = 0; % [mA]
 I_max= 0; % [mA]
 
@@ -30,9 +30,9 @@ I_max= 0; % [mA]
 rng('default');
 
 
-spk_t = [];
+spk_t = [1000 2000];
 
-spk_output = synaptic_neuron(num_trials, I_max, spk_t, time_interval, I_noise);
+spk_output = synaptic_neuron(1, 0, 0, time_interval, 1000, 1);
 
 spk_times = zeros(num_trials, size(spk_output, 2));
     

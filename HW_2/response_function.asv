@@ -37,7 +37,7 @@ function corr = response_function(spk_input, spk_output)
     corr = corrcoef(gau_sdf_input, gau_sdf_output);
     %t_corr = 1:length(corr); t_corr = dt * t_corr;
 
-    for i
+    for i in
     
 
     %% plot all curves
