@@ -1,5 +1,7 @@
 clear all, clc, close all
 
+ addpath(genpath("./utils"));
+
 %% Setting some constants and initial values
 
 %setting as global variables to be used in the spike generator

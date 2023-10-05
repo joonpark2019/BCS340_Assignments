@@ -1,5 +1,7 @@
 clear all, clc, close all
 
+ addpath(genpath("./utils"));
+
 %% Setting some constants and initial values
 
 %setting as global variables to be used in the spike generator
@@ -30,9 +32,11 @@ I_max= 0; % [mA]
 rng('default');
 
 
-spk_t = [1000 2000];
+spk_t = [200 400]; %in ms
 
-spk_output = synaptic_neuron(1, 0, 0, time_interval, 1000, 1);
+%synaptic_neuron(n_trials, i_inj, i_noise, spk_input, time_len, plot_flag)
+
+spk_output = synaptic_neuron(1, 0, 0, spk_t, time_interval, 1);
 
 spk_times = zeros(num_trials, size(spk_output, 2));
     
