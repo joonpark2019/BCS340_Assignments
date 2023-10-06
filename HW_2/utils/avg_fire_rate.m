@@ -5,7 +5,7 @@ function avg_rates = avg_fire_rate(n_trials, i_inj, i_noise, spk_input, time_len
     global dt
 
     % spk_times: a vector with 0's for non-spikes and 1's indicating spikes
-    spk_times = synaptic_neuron(n_trials, i_inj, i_noise, spk_input, time_len, 0);
+    spk_times = synaptic_neuron(n_trials, i_inj, i_noise, spk_input, time_len, 1);
 
     for i=1:n_trials
         
