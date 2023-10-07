@@ -19,32 +19,39 @@ E_thresh = -55; %threshold voltage for spikes [mV]
 global E_spike %[mV]
 E_spike = 10;
 global E_syn %[mV]
-E_syn = -45; 
+E_syn = 0; 
 global tau_syn
 tau_syn = 1;
 
 num_trials = 10; %number of spike trains generated to estimate firing rate
-I_noise = 30; % [mA]
-time_interval = 10; %[ms]
+I_noise = 1; % [mA] --> use first current which causes non-zero firing
+time_interval = 10000; %[ms]
 I_min = 0; % [mA]
 I_max= 0; % [mA]
+I_inj = 0;
 
 %fix random seed:
 rng('default');
+fr_mean = 10;
+spks_r = regular_spk_train(fr_mean, time_interval);
+spks_r_t = floor(spks_r / dt);
+spikes_r = zeros(1, time_interval/dt);
+spikes_r(spks_r_t) = 1;
+spikes_r = spikes_r(1:time_interval/dt);
 
-spk_input = [floor(time_interval / 2)]; %single spike input causing 
-    %disp(spk_input);
 
-%% Comparing spikes with noise against spikes without noise
-spks_norm = synaptic_neuron(1, 0, 0, spk_input, time_interval, 1);
-spks_noise = synaptic_neuron(1, 0, I_noise, spk_input, time_interval, 1);
+figure();
+t = dt:dt:time_interval;
+plot(t, spikes_r);
 
+avg_rate = mean(avg_fire_rate(num_trials, 0, I_noise, spks_r, time_interval));
+disp(avg_rate);
 
 
 %% finding probability of a spike causing an output spike
-probs = calculate_spike_prob(1000, 0, I_noise);
-disp(probs);
+% probs = calculate_spike_prob(1000, 0, I_noise);
+% disp(probs);
 
-histogram = cross_correlogram(spks_norm, spks_noise);
-figure;
-stem(histogram);
+% histogram = cross_correlogram(spks_norm, spks_noise);
+% figure;
+% stem(histogram);

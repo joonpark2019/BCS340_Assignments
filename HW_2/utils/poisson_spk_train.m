@@ -3,7 +3,7 @@
 % generate)
 %output: spike train
 function spk_output = poisson_spk_train(fr_mean, time)
-    global dt
+
     num_spks = fr_mean * time;
     isi = -(1/fr_mean).*log(rand(num_spks,1));
     spk_times = cumsum(isi);
