@@ -1,0 +1,106 @@
+
+clear all, clc, close all
+
+ addpath(genpath("./utils"));
+
+%% Setting some constants and initial values
+
+%setting as global variables to be used in the spike generator
+global E_rest
+E_rest = -65; % resting potential [mV]
+global tau
+tau = 20; % time constant [ms]
+global dt
+dt=0.1; % integration time step [ms]
+global R
+R = 10; %resistance(Ohms)
+global E_thresh
+E_thresh = -55; %threshold voltage for spikes [mV]
+global E_spike %[mV]
+E_spike = 10;
+global E_syn %[mV]
+E_syn = 0; 
+global tau_syn
+tau_syn = 1;
+
+num_trials = 10; %number of spike trains generated to estimate firing rate
+I_noise = 1; % [mA] --> use first current which causes non-zero firing
+time_interval = 1000; %[ms]
+I_min = 0; % [mA]
+I_max= 0; % [mA]
+I_inj = 0;
+fr_mean = 500/1000;
+
+%fix random seed:
+rng('default');
+
+
+
+
+%% colored noise: mean isi distribution:
+
+% Set the time window and bin size for the histogram
+time_window = 2.0;  % Time window in ms
+bin_size = 0.1;     % Bin size in ms
+noise_strength = 5;
+
+spk_input_p = poisson_spk_train(fr_mean, time_interval);
+%spk_input_p = flatten(spk_input_p);
+spks_p = synaptic_neuron(1, 0, I_noise, spk_input_p, time_interval, 1);
+spk_output_p = dt*find(spks_p);
+%spk_output_p = flatten(spk_output_p);
+
+spk_input_r = regular_spk_train(fr_mean, time_interval);
+spk_input_r = flatten(spk_input_r);
+spks_r = synaptic_neuron(1, 0, I_noise, spk_input_r, time_interval, 1);
+spk_output_r = dt*find(spks_r);
+spk_output_r = flatten(spk_output_r);
+
+%note: order MUST be input, output
+correlation_hist_p = correlation_histogram(flatten(spk_input_p), spk_output_p, time_window, bin_size);
+correlation_hist_p = correlation_hist_p;
+correlation_hist_r = correlation_histogram(flatten(spk_input_r), spk_output_r, time_window, bin_size);
+correlation_hist_r = correlation_hist_r;
+
+[response, x_range] = response_function_reg(0, fr_max)
+
+
+function [sum_hist, fr_range] = response_function_reg(fr_min, fr_max)
+    time_window = 2.0;  % Time window in ms
+    bin_size = 0.1;     % Bin size in ms
+    noise_strength = 5;
+    fr_range = fr_min:(5/1000):fr_max;
+    
+    for i=1:length(fr_range)
+        spk_input_r = regular_spk_train(fr_range(i), 1000);
+        spk_input_r = flatten(spk_input_r);
+        spks_r = synaptic_neuron(1, 0, noise_strength, spk_input_r, time_interval, 1);
+        spk_output_r = dt*find(spks_r);
+        spk_output_r = flatten(spk_output_r);
+        sum_hist(i) = sum(correlation_histogram(flatten(spk_input_r), spk_output_r, time_window, bin_size));
+        
+    end
+
+end
+
+
+% % divide by the avg number of spikes occurring every ms x 2 ms time window
+% norm_factor_p = sum(spks_p);
+% norm_factor_r = sum(spks_r);
+% 
+% x = bin_size:bin_size:time_window;
+% figure();
+% bar(x, correlation_hist_p);
+% figure();
+% bar(x, correlation_hist_r);
+% disp(sum(correlation_hist_p) / norm_factor_p);
+% disp(sum(correlation_hist_r) / norm_factor_r);
+
+%% use this function to unify all vectors into ROW vectors
+function a = flatten(b)
+    if sum(size(b) == [length(b), 1]) == 2
+        a = b.';
+    else
+        a = b;
+    end
+end
