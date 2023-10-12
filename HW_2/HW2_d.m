@@ -23,66 +23,36 @@ E_syn = 0;
 global tau_syn
 tau_syn = 1;
 
-num_trials = 10; %number of spike trains generated to estimate firing rate
-I_noise = 1; % [mA] --> use first current which causes non-zero firing or use a current which causes some degree of significant randomness??
-time_interval = 10000; %[ms]
-I_min = 0; % [mA]
-I_max= 0; % [mA]
-I_inj = 0;
+num_trials = 10;                % number of spike trains generated to estimate firing rate
+I_noise = 5;                    % [mA]: use a noise level which causes non-negligible stochasticity but does not dominate the ISI statistics
+time_interval = 10000;          %[ms]
+
 
 %fix random seed:
 rng('default');
-fr_mean = 1/1000;
-spks_r = regular_spk_train(fr_mean, time_interval);
-spks_r_t = floor(spks_r / dt);
-spikes_r = zeros(1, time_interval/dt);
-spikes_r(spks_r_t) = 1;
-spikes_r = spikes_r(1:time_interval/dt);
 
-%% Sample test
+%% Generate Input Spike Train
+fr_mean = 10/1000;                                      % 10 Hz input rate (10 spikes / 1000 ms)
+spks_r = regular_spk_train(fr_mean, time_interval);     % Input spike train with regular ISI
+
+%% Test which shows that output also has regular ISI
+
+spks_test = synaptic_neuron(1, 0, I_noise, spks_r, time_interval, 0);
+
+%% Create histogram of ISI:
+% Note: result shows a strong peak at 100 ms, which corresponds to a
+% regular 10 Hz output spike train
+binSize = 1;   % 1 ms bins
+max_isi = 500; % 500 ms maximum isi
+x = 1:binSize:max_isi;
+
+spks_output_r = synaptic_neuron(1, 0, I_noise, spks_r, time_interval, 1);
+isi_sample_r = dt * diff(find(spks_output_r));
+isi_sample_r = reshape(isi_sample_r.',1,[]);
+intervalDist_r = hist(isi_sample_r(isi_sample_r < max_isi), x);
+intervalDist_r = intervalDist_r / sum(intervalDist_r) / binSize; % normalize by dividing by spike number
 figure();
-t = dt:dt:time_interval;
-plot(t, spikes_r);
-
-avg_rate = mean(avg_fire_rate(num_trials, 0, I_noise, spks_r, time_interval));
-disp(avg_rate);
-
-targ_r = find_10hz_rate(8/1000, 50/1000, num_trials, I_noise, time_interval);
-disp(targ_r);
-
-function target_rate = find_10hz_rate(f_mean_min, f_mean_max, num_trials, I_noise, time_interval)
-    tStart = tic;    
-    search_interval = f_mean_min:(1/1000):f_mean_max;
-    for rate = search_interval
-
-        spks_r = regular_spk_train(rate, time_interval);
-
-        %stochastic variable --> use meand and std_dev to judge whether
-        %firing rate is 10 Hz
-        rates = avg_fire_rate(num_trials, 0, I_noise, spks_r, time_interval);
-        target_rate = rate;
-        if 10 <= mean(rates) + std(rates) || mean(rates) + std(rates) <= 10
-            disp(mean(rates));
-            break
-        end
-
-        %enforce time limit on search
-        tEnd = toc;
-        if (tEnd - tStart > 120)
-            
-            break;
-        end
-    end
-
-    
-end
-
-
-
-%% finding probability of a spike causing an output spike
-% probs = calculate_spike_prob(1000, 0, I_noise);
-% disp(probs);
-
-% histogram = cross_correlogram(spks_norm, spks_noise);
-% figure;
-% stem(histogram);
+bar(x, intervalDist_r);
+title("Inter Spike Interval Histogram")
+xlabel('Interspike interval (1 ms bins)');
+ylabel('Probability');

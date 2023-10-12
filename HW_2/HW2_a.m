@@ -1,4 +1,7 @@
+
 clear all, clc, close all
+
+ addpath(genpath("./utils"));
 
 %% Setting some constants and initial values
 
@@ -20,51 +23,66 @@ E_syn = 0;
 global tau_syn
 tau_syn = 1;
 
-num_trials = 10; %number of spike trains generated to estimate firing rate
-I_noise_max = 20; % [mA]
-time_interval = 10000; %[ms]
-I_min = 0; % [mA]
-I_max= 0; % [mA]
-
 %fix random seed:
 rng('default');
 
-spk_t = [];
+%% colored noise: very high noise strengtht to illustrate fit to lognormal distribution
 
-target_rate = 5;
+noise_strength_high = 50; % high noise current used
+test_time = 10000; %ms
+spks_test = synaptic_neuron(10, 0, noise_strength_high, [], test_time, 0);
+isi_sample_test = dt * diff(find(spks_test));
+isi_sample_test = reshape(isi_sample_test.',1,[]);
+figure();  
+binSize = 1;                                            % 1 ms bins
+bins = 1:binSize:100;
+intervalDist_test = hist(isi_sample_test(isi_sample_test < 100), bins);
+intervalDist_test = intervalDist_test / sum(intervalDist_test) / binSize; % normalize by dividing by spike number
+%fit to lognormal distribution:
+pd = fitdist(transpose(isi_sample_test),'Lognormal');
+disp("Lognormal distribution:");
+disp(pd);
+disp("Mean firing rate (Hz) for high test current:");
+% rate is calculated as 1 / avg(ISI). For a lognormal distribution
+% parameterized by mu, sigma, the mean of the distribution is e^mu. 
+disp(1000 / exp(pd.mu)); %rate in Hz
+y = pdf(pd,bins);
 
-[I_n_start, I_n_target] = noise_tuning(target_rate, num_trials, 0, I_noise_max, spk_t, time_interval);
+bar(bins, intervalDist_test);
+hold on
+plot(bins, y, 'r', 'LineWidth',2)
+title("Inter Spike Interval Histogram")
+xlabel('Interspike interval (1 ms bins)');
+ylabel('Probability');
+hold off
 
-function [I_n_start, I_n_target] = noise_tuning(target_rate, n_trials, I_inj, I_n_max, spk_input, time)
-    I_n_start = 0; I_n_target_rough = 0; rate_at_targ = 0;
-    
-    start_rate_found = 0;
-    for i_n=1:I_n_max
-        avg_rate = mean(avg_fire_rate(n_trials, I_inj, i_n, spk_input, time)); 
-        if avg_rate ~= 0 && ~start_rate_found
-            I_n_start = i_n; start_rate_found = 1; disp("got start rate"); disp(I_n_start);
-        end
-        if (ceil(abs(avg_rate - target_rate)) < 2) && (avg_rate < target_rate)
-            I_n_target_rough = i_n; disp("got rough target rate"); disp(I_n_target_rough); disp(avg_rate);
-            break;
-        end
-    end
+%% noise which causes an average firing rate of around 5 Hz
 
-    for i_n_f=(I_n_target_rough):0.1:I_n_max
-        avg_rate = mean(avg_fire_rate(n_trials, I_inj, i_n_f, spk_input, time)); 
-        if abs(avg_rate - target_rate) < 0.2
-            I_n_target = i_n_f; rate_at_targ = avg_rate;
-            break; 
-        end
-    end
+noise_strength = 10; % noise current factor causing an average 5 Hz firing rate
+test_time = 10000; %ms
+spks = synaptic_neuron(10, 0, noise_strength, [], test_time, 0);
+isi_sample = dt * diff(find(spks));
+isi_sample = reshape(isi_sample.',1,[]);
+figure();  
+binSize = 1;                                            % 1 ms bins
+bins = 1:binSize:100;
+intervalDist = hist(isi_sample(isi_sample < 100), bins);
+intervalDist = intervalDist / sum(intervalDist) / binSize; % normalize by dividing by spike number
+%fit to lognormal distribution:
+pd = fitdist(transpose(isi_sample),'Lognormal');
+disp("Lognormal distribution:");
+disp(pd);
+disp("Mean firing Rate (Hz):");
+% rate is calculated as 1 / avg(ISI). For a lognormal distribution
+% parameterized by mu, sigma, the mean of the distribution is e^mu. 
+disp(1000 / exp(pd.mu));        %rate in Hz
+y = pdf(pd,bins);
 
-
-    disp("starting current [mA]: ");
-    disp(I_n_start);
-    disp("target current [mA]: ");
-    disp(I_n_target);
-    disp("rate at target current[mA]: ");
-    disp(rate_at_targ);
-
-end
+bar(bins, intervalDist);
+hold on
+plot(bins, y, 'r', 'LineWidth',2)
+title("Inter Spike Interval Histogram")
+xlabel('Interspike interval (1 ms bins)');
+ylabel('Probability');
+hold off
 

@@ -19,32 +19,25 @@ E_thresh = -55; %threshold voltage for spikes [mV]
 global E_spike %[mV]
 E_spike = 10;
 global E_syn %[mV]
-E_syn = -45; 
+E_syn = -35; 
 global tau_syn
 tau_syn = 1;
 
-num_trials = 10; %number of spike trains generated to estimate firing rate
-I_noise = 30; % [mA]
+I_noise = 15; % [mA] : slightly stronger noise than that determined in part a
 time_interval = 10; %[ms]
-I_min = 0; % [mA]
-I_max= 0; % [mA]
 
 %fix random seed:
 rng('default');
 
-spk_input = [floor(time_interval / 2)]; %single spike input causing 
-    %disp(spk_input);
+spk_input = [floor(time_interval / 2)]; %single spike input at midpoint of the time interval
 
 %% Comparing spikes with noise against spikes without noise
 spks_norm = synaptic_neuron(1, 0, 0, spk_input, time_interval, 1);
 spks_noise = synaptic_neuron(1, 0, I_noise, spk_input, time_interval, 1);
 
-
-
 %% finding probability of a spike causing an output spike
+% run 1000 trials and determine fraction of the trials where an output
+% spike occurred near the input spike
 probs = calculate_spike_prob(1000, 0, I_noise);
+disp("Probability of a spike:");
 disp(probs);
-
-histogram = cross_correlogram(spks_norm, spks_noise);
-figure;
-stem(histogram);

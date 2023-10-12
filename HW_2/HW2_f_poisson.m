@@ -26,7 +26,7 @@ tau_syn = 1;
 I_noise = 5; % [mA] --> use first current which causes non-zero firing
 time_interval = 1000; %[ms]
 fr_min = 0;
-fr_max = 900/1000;
+fr_max = 800/1000;
 
 %fix random seed:
 rng('default');
@@ -41,25 +41,44 @@ rng('default');
 %% poisson input:
 spk_input_p = poisson_spk_train(fr_max, time_interval);
 
+% creating a logical array to plot the input poisson spike
+spikes_input_p = zeros(time_interval/dt, 1);
+spikes_input_p(floor(spk_input_p / dt)) = 1;
+spikes_input_p = spikes_input_p(1:time_interval/dt);
+
 %% taken from: https://www.hms.harvard.edu/bss/neuro/bornlab/nb204/statistics/poissonTutorial.txt
 %figure();                                              % use Figure 2
 binSize = 1;                                            % 1 ms bins
 x = 1:binSize:100;
 
-%% Giving the Poisson spike train as an input to a synaptic neuron (no noise):
+%% Giving the Poisson spike train as an input to a synaptic neuron:
 
-spks_p = synaptic_neuron(1, 0, I_noise, flatten(spk_input_p), time_interval, 1);
+spks_p = synaptic_neuron(1, 0, I_noise, flatten(spk_input_p), time_interval, 0);
 isi_sample_p = dt * diff(find(spks_p));
 isi_sample_p = reshape(isi_sample_p.',1,[]);
 intervalDist_p = hist(isi_sample_p(isi_sample_p < 100), x);
 intervalDist_p = intervalDist_p / sum(intervalDist_p) / binSize; % normalize by dividing by spike number
+
+
+figure();
+subplot(1,2,1);
+stem(spikes_input_p)
+title("Input Poisson Spike Train")
+xlabel('Time (ms)');
+ylabel('Spike');
+subplot(1,2,2);
+stem(spks_p)
+title("Output Poisson Spike Train")
+xlabel('Time (ms)');
+ylabel('Spike');
+
 
 figure('Position', [50, 50, 1000, 900]);
 subplot(1,2,1);
 plot(1000*x_range_p(1:length(response_p)), response_p)
 title("Poisson Input Spike Response Function")
 xlabel('Average Input Spike Rate (Hz)');
-ylabel('Number of Spikes within 1 ms of input spikes');
+ylabel('Fraction of Output Spikes within 0.4 ms of Input Spikes');
 
 subplot(1,2,2);
 bar(x, intervalDist_p)
@@ -78,12 +97,11 @@ hold off
 
 function [sum_hist, fr_range] = response_function_poisson(fr_min, fr_max)
     global dt;
-    time_window = 2.0;  % Time window in ms
-    bin_size = 0.1;     % Bin size in ms
-    noise_strength = 5;
-    time_interval = 1000;
+    time_window = 0.8;      % Time window in ms
+    noise_strength = 5;     % Noise level in mA
+    time_interval = 1000;   % Time interval for simulation in ms
     fr_range = fr_min:(5/1000):fr_max;
-    sum_hist = [0];
+    sum_hist = [];
     
     for i=1:length(fr_range)
         spk_input_p = poisson_spk_train(fr_range(i), 1000);
@@ -91,10 +109,10 @@ function [sum_hist, fr_range] = response_function_poisson(fr_min, fr_max)
         spks_p = synaptic_neuron(1, 0, noise_strength, spk_input_p, time_interval, 0);
         spk_output_p = dt*find(spks_p);
         spk_output_p = flatten(spk_output_p);
-        total_count = sum(correlation_histogram(flatten(spk_input_p), spk_output_p, time_window, bin_size));
-        %disp(total_count);
-        %disp(size(total_count));
-        sum_hist = [sum_hist, total_count];
+        % find fraction of output spikes within the time window of input
+        % spikes
+        fraction_corr = correlation(flatten(spk_input_p), spk_output_p, time_window) / length(spks_p);
+        sum_hist = [sum_hist, fraction_corr];
         
     end
 

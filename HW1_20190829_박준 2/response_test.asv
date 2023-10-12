@@ -1,0 +1,47 @@
+clear all, clc, close all
+
+clear; clc; close all; 
+
+%% Setting some constants and initial values
+
+%setting as global variables to be used in the spike generator
+global E_rest
+E_rest = -65; % resting potential [mV]
+global tau
+tau = 20; % time constant [ms]
+global dt
+dt=0.1; % integration time step [ms]
+global R
+R = 10; %resistance(Ohms)
+global E_thresh
+E_thresh = -55; %threshold voltage for spikes [mV]
+global E_spike %[mV]
+E_spike = 10;
+
+num_trials = 1;
+
+%Noise current found in part e)
+I_noise = 1.6200; %[mA]
+
+%The time interval was increased in order to improve precision:
+time_interval = 5000; %[ms]
+
+
+%fix random seed:
+rng('default');
+
+response(-1, 5);
+
+function response(i_min, i_max)
+    global dt
+
+    i_inj = i_min:0.1:i_max;
+    f_rates = zeros(length(i_inj), 1);
+    for i=1:length(i_inj)
+        spks = spike_generator_stochastic(num_trials, i_inj(i), time_interval, I_noise);
+        f_rates(i) = sum(spks) / time_interval;
+    end
+
+    t = dt:dt:time_interval;
+
+end
