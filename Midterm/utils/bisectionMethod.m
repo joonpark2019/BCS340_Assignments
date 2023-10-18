@@ -1,0 +1,14 @@
+function c = bisectionMethod(f,a,b,error)%f=@(x)x^2-3; a=1; b=2; (ensure change of sign between a and b) error=1e-4
+c=(a+b)/2;
+while abs(f(c))>error
+    if f(c)<0&&f(a)<0
+        a=c;
+    else
+        b=c;
+    end
+    c=(a+b)/2;
+end
+
+%% taken from: https://kr.mathworks.com/matlabcentral/answers/483519-bisection-method-code-matlab
+
+%% want decay rate to be greater than 50%

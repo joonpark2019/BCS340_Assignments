@@ -1,0 +1,68 @@
+
+clear all, clc, close all
+
+ addpath(genpath("./utils"));
+
+%fix random seed:
+rng('default');
+
+dt = 0.01;
+time_interval = 299; % [ms]
+
+i_inj_factor = [0.1, 1, 5, 10, 100, 1000];
+
+figure('Position', [50 50 1500 600])
+
+% 
+% for i = 1:length(i_inj_factor)
+%     % i_inj = i_inj_factor(i)*[zeros(floor(100/dt), 1); ones(floor(time_interval/dt), 1)];
+%     i_inj = i_inj_factor(i)*zeros(floor(time_interval/dt), 1);
+%     v_m = hodkin_huxley(i_inj, time_interval);
+%     TF = islocalmax(v_m);
+%     %disp(sum(TF));
+%     % disp(find(TF));
+%     t = dt:dt:time_interval;
+%     subplot(1, length(i_inj_factor), i);
+%     plot(t, v_m, t(TF), v_m(TF),'r*');
+%     title("Injected Current: " + string(i_inj_factor(i)) + " uA/cm^2");
+%     xlabel('Time (ms)');
+%     ylabel('Voltage (mV)s');
+% 
+% end
+
+i_test = [0.1, 1, 5, 10, 100, 1000];
+start_time = 50; %ms
+
+for i = 1:length(i_inj_factor)
+    i_inj = i_test(i)*[zeros(floor(start_time/dt), 1); ones(floor((time_interval - start_time)/dt), 1)];
+    
+    v_m = hodkin_huxley(i_inj, time_interval);
+    v_m = v_m(start_time/dt:end);
+
+    damped_cond = check_damped(v_m);
+
+    %disp(sum(TF));
+    % disp(find(TF));
+    TF = islocalmax(v_m);
+    t = start_time:dt:time_interval;
+    subplot(1, length(i_inj_factor), i);
+    plot(t, v_m, t(TF), v_m(TF),'r*');
+    title("Is NOT damped: " + string(damped_cond));
+    xlabel('Time (ms)');
+    ylabel('Voltage (mV)s');
+
+end
+
+
+function regular = check_damped(voltages)
+    TF = ;
+    maxima = voltages(TF);
+    min = voltages(islocalmin(voltages));
+
+    if (maxima(2) >= 0.3 * maxima(1))
+        regular = 1;
+    else
+        regular = 0;
+    end
+
+end

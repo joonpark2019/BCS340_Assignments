@@ -8,13 +8,11 @@ function v_m = hodkin_huxley(i_inj, time)
     % Battery voltage ( in mV); 1=n, 2=m, 3=h
     E(1)=-12; E(2)=115; E(3)=10.613;
     % Initialization of some variables
-     V=-10; x=zeros(1,3); x(3)=1; t_rec=0;
+     V=-10; x=zeros(1,3);  t_rec=0; %x(3)=1;
     % Time step for integration
     dt=0.01;
     v_m = zeros(floor(time/dt), 1);
     R = 10; %resistance(Ohms)
-
-
 
     %% Integration with Euler method
     for i= 1:floor(time/dt)
