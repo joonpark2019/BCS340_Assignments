@@ -1,0 +1,43 @@
+clear all, clc, close all
+
+filter_size = 25.0;
+resol = 0.1;
+
+%%% Gabor filter with no rotation
+
+
+%%%% Show Gabor filter rotated at an angle with a 
+
+g = gaborFilter(filter_size, 10, 10, 0, 0, pi/6, 3*pi/2, pi*10);
+filt_space= -filter_size :resol:filter_size ;
+[xx, yy] = meshgrid(filt_space , filt_space);
+figure();
+
+imagesc(filt_space,filt_space,g);  
+colormap('jet');
+colorbar;
+
+
+angles = [0, pi/4, 3*pi/4, 5*pi/4, 7*pi/4];
+for ang=angles
+    g_
+end
+
+
+
+
+
+figure();
+rand_stim = stim(filter_size, 30);
+rand_space = -filter_size:resol:filter_size;
+imagesc(rand_space, rand_space, rand_stim);
+colorbar;
+
+output = g .* rand_stim;
+figure()
+imagesc(rand_space, rand_space, rand_stim);
+
+
+gaussian_blur = gaussianFilter(rand_stim, filter_size, 0.5, 0.5);
+figure()
+imagesc(rand_space, rand_space, gaussian_blur);

@@ -1,13 +1,34 @@
 clear all, clc, close all
 
 
-filter_size = 4.0;
-resol = 0.05;
-g = gaborFilter(filter_size , 0.3, 0.3, 1.0, 1.0, pi/6, 1.0, 1.0);
+filter_size = 25.0;
+resol = 0.1;
+g = gaborFilter(filter_size, 10, 10, 0, 0, 7*pi/6, pi/2, pi*10);
 filt_space= -filter_size :resol:filter_size ;
 [xx, yy] = meshgrid(filt_space , filt_space);
 figure();
-pcolor(xx, yy, g);
+%surfc(xx, yy, g);
+
+imagesc(filt_space,filt_space,g);  
+colormap('jet');
+colorbar;
+% 
+figure()
+rand_stim = stim_v2(filter_size, 30);
+rand_space = -filter_size:resol:filter_size;
+imagesc(rand_space, rand_space, rand_stim);
+colormap('gray');
+colorbar;
+colorbar;
+
+output = g .* rand_stim;
+figure()
+imagesc(rand_space, rand_space, rand_stim);
+
+
+gaussian_blur = gaussianFilter(rand_stim, filter_size, 0.5, 0.5);
+figure()
+imagesc(rand_space, rand_space, gaussian_blur);
 
 % original_img = imread("monkey.jpg");
 % original_img = original_img(500:550, 600:770, :);
