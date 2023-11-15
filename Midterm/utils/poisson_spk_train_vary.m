@@ -2,7 +2,7 @@
 %input: fr_mean (firing rates in num_spikes / miliseconds.  
 % ex) 500/1000 --> 500 spikes in 1000 ms, or 50 Hz
 % time: length of spike train in ms
-%output: times for spikes in ms ex) [0 50 100 .....]
+%output: logical indices indicating presence of spikes
 function spk_output = poisson_spk_train_vary(n_trials, r, time)
     global dt;
 

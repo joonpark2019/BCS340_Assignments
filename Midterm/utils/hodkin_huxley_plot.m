@@ -1,4 +1,4 @@
-function v_m = hodkin_huxley(i_inj, time)
+function hodkin_huxley_plot(i_inj, time)
 
 
     %% Integration of Hodgkin--Huxley equations with Euler method
@@ -12,6 +12,10 @@ function v_m = hodkin_huxley(i_inj, time)
     % Time step for integration
     dt=0.01;
     v_m = zeros(floor(time/dt), 1);
+    n = zeros(floor(time/dt), 1);
+    m = zeros(floor(time/dt), 1);
+    h = zeros(floor(time/dt), 1);
+
     R = 10; %resistance(Ohms)
 
     %% Integration with Euler method
@@ -30,6 +34,7 @@ function v_m = hodkin_huxley(i_inj, time)
         x_0=Alpha.*tau;
         % leaky integration with Euler method
         x=(1-dt./tau).*x+dt./tau.*x_0;
+        n(i) = x(1); m(i) = x(2); h(i) = x(3);
 
         % calculate actual conductances with given n, m, h
         gnmh(1)=g(1)*x(1)^4;
@@ -41,4 +46,29 @@ function v_m = hodkin_huxley(i_inj, time)
         V=V+dt*(i_inj(i)-sum(I));
         v_m(i) = V;
     end
+    
+    t = dt:dt:time;
+    figure('Position', [100, 200, 1000, 1000])
+    subplot(1,3,1)
+    plot(t, v_m)
+    xlabel("Time (ms)")
+    ylabel("Voltage (mV)")
+    title("Time vs. Voltage")
+    subplot(1,3,2)
+    plot(t, i_inj)
+    xlabel("Time (ms)")
+    ylabel("Injected Current (uA/cm^2)")
+    title("Time vs. Injected Current")
+    subplot(1,3,3)
+    plot(t, n);
+    hold on
+    plot(t,m)
+    hold on
+    plot(t,h)
+    xlabel("Time (ms)")
+    ylabel("Activation Fraction")
+    title("Time vs. Activation Factors (n,m,h)")
+    legend('n', 'm', 'h')
+
+
 end% time loop
