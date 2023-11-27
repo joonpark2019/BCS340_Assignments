@@ -6,16 +6,13 @@ clear all, clc, close all
 %fix random seed:
 rng('default');
 
-global dt
-dt = 1;
-
 %% Poisson Spike Generator
-num_trials = 100; % # of trials
-time = 100; % ms
-rate = 10; % # of spikes/s (constant) --> Hz
-p = rate/1000; % 1ms
+num_trials = 100;   % # of trials
+time = 100;         % ms
+rate = 800;          % # of spikes/s (average firing rate in Hz)
+p = rate/1000;      % # of spikes/ms
 
-T = 0.1:0.1:1;    % times in seconds
+T = 0.1:0.1:1;      % time in seconds
 T = 1000 * T;       % convert to ms
 
 fano_factors = zeros(length(T), 1);
@@ -31,10 +28,11 @@ for i = 1:length(T)
     fano_factor = std(rates_per_trial)^2 / mean(rates_per_trial);
     fano_factors(i) = fano_factor;
 end
-% 
-% spks_point = poisson_spk_train_point(num_trials, p, time);
-% rates_per_trial = sum(spks_point, 2)./(time / 1000);
-% avg = mean(rates_per_trial);
-% std_dev = std(rates_per_trial);
-% disp(avg);
-% disp(std_dev);
+% stem(spks_point(1, :));
+
+figure('Position', [50 50 1500 600])
+plot(T, fano_factors);
+title("Time Length vs. Fano Factor");
+xlabel("Time Length of Trial (ms)");
+ylabel("Fano Factor");
+writematrix(fano_factors, 'fano_factos_100Hz.csv')

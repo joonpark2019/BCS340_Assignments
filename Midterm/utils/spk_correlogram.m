@@ -12,7 +12,6 @@ function hist_correlogram = spk_correlogram(spike_train1, spike_train2, time_win
     % Initialize an array to store spike time differences
     spike_time_differences = [];
 
-    % bug: length of histEdges is different from length of 
     hist_edges = -time_window/2:bin_size:time_window/2;
     
     % Calculate spike time differences within the time window
@@ -22,12 +21,12 @@ function hist_correlogram = spk_correlogram(spike_train1, spike_train2, time_win
         logic_indices = abs(spike_train2 - t1) <= time_window/2;
         spk_2_range = spike_train2( logic_indices);
 
-        time_diffs = spk_2_range - t1; %time difference against all spikes greater than the input spk --> assume causality
+        time_diffs = spk_2_range - t1;
         spike_time_differences = [spike_time_differences, time_diffs];
         
     end
     hist_correlogram = histcounts(spike_time_differences, hist_edges);
-    hist_correlogram = hist_correlogram / sum(hist_correlogram);
+    hist_correlogram = hist_correlogram;
 
     if plot_flg
         bar(hist_edges(1:end-1), hist_correlogram, 'hist');
@@ -38,4 +37,4 @@ function hist_correlogram = spk_correlogram(spike_train1, spike_train2, time_win
 
 
 
-end %for any given spike, how many are within the time window??
+end
