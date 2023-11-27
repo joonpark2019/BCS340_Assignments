@@ -2,7 +2,7 @@ clear all, clc, close all
 
 
 filter_size = 25.0;
-resol = 1;
+resol = 0.5;
 filt_space= -filter_size :resol:filter_size ;
 [xx, yy] = meshgrid(filt_space , filt_space);
 
