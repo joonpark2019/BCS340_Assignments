@@ -1,7 +1,7 @@
 clear all, clc, close all
 
 filter_size = 25.0;
-resol = 0.1;
+resol = 0.5;
 
 %%% Gabor filter with no rotation
 

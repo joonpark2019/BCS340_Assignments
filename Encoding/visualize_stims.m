@@ -16,6 +16,7 @@ function visualize_stims(resol, rsize, num_dots, num_stims)
 %% code taken from: https://kr.mathworks.com/matlabcentral/answers/476715-superimposing-two-imagesc-graphs-over-each-other
     %plot first data 
     figure();
+    title('STIMS Overlaid on Gabor Filter');
     ax1 = axes; 
     im = imagesc(ax1,g); 
     im.AlphaData = 0.5; % change this value to change the background image transparency 
@@ -39,6 +40,6 @@ function visualize_stims(resol, rsize, num_dots, num_stims)
     %set([ax1,ax2],'Position',[.17 .11 .685 .815]); 
     cb1 = colorbar(ax1,'Position',[.05 .11 .0675 .815]); 
     cb2 = colorbar(ax2,'Position',[.88 .11 .0675 .815]);
-    title('STIMS Overlaid on Gabor Filter');
+    
 
 end
