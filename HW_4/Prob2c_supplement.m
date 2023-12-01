@@ -4,7 +4,7 @@ rng("default");
 % all time units are in ms: use 0.1ms intervals
 avg_frate = 20 / 1000; % 20 Hz
 time_len = 100; % ms
-num_trials = 100;
+num_trials = 1000;
 dt = 0.5:0.5:5;
 s = zeros(size(dt));
 s_theor = zeros(size(dt));

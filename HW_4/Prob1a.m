@@ -16,6 +16,9 @@ avg_N = avg_frate * time_len;
 n = n_bins;
 poisson_probs = (avg_N.^n.*exp(1).^(-1*avg_N))./factorial(n);
 
+disp("Average Number of Spikes:");
+disp(mean(num_spks));
+
 %% plot both on on the same histogram:
 figure();
 bar(n_bins, prob_hist)

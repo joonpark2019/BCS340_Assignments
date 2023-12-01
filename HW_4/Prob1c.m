@@ -1,6 +1,6 @@
 clear all, clc, close all
 
-% all time units are in ms: use 0.1ms intervals
+% all time units are in ms: use 0.1ms intervals for spike train generation
 avg_frate = 5 / 1000; % 5 Hz
 dt = 0.1; % 0.1ms time interval
 time_len = 1000; % 1 second: 1000 ms
@@ -12,8 +12,14 @@ n = 0:1:100; % made the number of possible number of spikes/train very large -->
 poisson_probs = (avg_N.^n.*exp(1).^(-1*avg_N))./factorial(n);
 S_analytic_2 = entropy_rate(poisson_probs);
 
-disp("Entropy (bits) found with Stirling Approximation: ");
+disp("Entropy (bits) found with Analytic Expression (Derived from Stirling Approximation): ");
 disp(S_analytic_1);
+
+numerical_entropy = 3.1905; % found using Prob1b.m
+percentage_error = 100 * abs(numerical_entropy - S_analytic_1) / S_analytic_1;
+disp("Percentage Error:");
+disp(percentage_error);
+
 disp("Entropy (bits) found with Poisson distribution with large range of possible spikes: ");
 disp(S_analytic_2);
 
