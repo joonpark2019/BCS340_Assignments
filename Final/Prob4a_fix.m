@@ -9,7 +9,7 @@ b = 0.2;
 c = -65;
 d = 2;
 times = 0:1:time;
-v = ik_neuron(I, time, a, b, c, d);
+v = ik_neuron(I, time, a, b, c, d, []);
 disp("Number of spikes using default parameters:");
 disp(sum(islocalmax(v)));
 
@@ -18,7 +18,7 @@ disp(sum(islocalmax(v)));
 d_final = d;
 ds = d:1:20;
 for d_test = ds
-    v = ik_neuron(I, time, a, b, c, d_test);
+    v = ik_neuron(I, time, a, b, c, d_test, []);
     num_spks = sum(islocalmax(v));
     if num_spks == 25
         d_final = d_test;
@@ -28,7 +28,7 @@ end
 
 
 %% spikes are determined using local maxima in the membrane voltage
-v = ik_neuron(I, time, a, b, c, d_final);
+v = ik_neuron(I, time, a, b, c, d_final, []);
 loc_max = islocalmax(v);
 disp("Number of Spikes in 500 ms interval after tuning parameter d:");
 disp(sum(loc_max));

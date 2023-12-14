@@ -7,12 +7,17 @@ function voltages = ik_neuron(I, time, a, b, c, d, spks)
     tau_syn = 20;
     E_syn = -40;
     I_syn = 0;
+    
     voltages = zeros(floor(time), 1);
     voltages(1) = v;
     u=b*v; % Initial values of u
     for t=1:floor(time) % simulation of 1000 ms
-        g_syn = g_syn - (1/tau_syn)*g_syn;
-        I_syn = g_syn*(v - E_syn);
+        if ~isempty(spks) && spks(t) == 1
+            g_syn = g_syn - (1/1)*g_syn;
+            I_syn = g_syn*(v - E_syn);
+            disp(g_syn);
+        end
+        
         if v >= 30
             v=c;
             u=u+d;
@@ -21,5 +26,4 @@ function voltages = ik_neuron(I, time, a, b, c, d, spks)
         u=u+a*(b*v-u);
         voltages(t+1) = v;
     end    
-
 end
