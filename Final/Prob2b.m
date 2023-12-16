@@ -55,7 +55,6 @@ figure();
 
 bar(bins_up_rate, hist_up_rate);
 hold on;
-hold on;
 bar(bins_down_rate, hist_down_rate);
 xline([threshold_1 threshold_2 threshold_3],'--r',{'-1 Standard Dev.','Average','+1 Standard Dev.'})
 legend("Upward Stimuli", "Downward Stimuli");

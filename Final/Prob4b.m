@@ -48,3 +48,5 @@ title("ISI Histogram");
 xlabel("interspike interval (ms)");
 ylabel("Frequency");
 
+disp("Tuned value of parameter d:");
+disp(d_final);

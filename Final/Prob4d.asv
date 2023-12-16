@@ -35,13 +35,7 @@ v_response_1 = ik_neuron(0, time, a_param, b_param, c_param, d_param, spk_times_
 v_response_2 = ik_neuron(0, time, a_param, b_param, c_param, d_param, spk_times_b);
 figure();
 subplot(1,2,1);
-plot(0:1:time, v_response_1);
-title("Spike Output for Synaptic Input from Fast, Regular Spiking");
-xlabel("time (ms)");
-ylabel("Membrane Voltage (mV)");
-
+title("Spike Output for Synaptic Input from Fa");
+plot(v_response_1);
 subplot(1,2,2);
-plot(0:1:time,v_response_2);
-title("Spike Output for Synaptic Input from Bursting Spikes");
-xlabel("time (ms)");
-ylabel("Membrane Voltage (mV)");
+plot(v_response_2);
